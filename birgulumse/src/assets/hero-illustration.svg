@@ -1,0 +1,13 @@
+<svg width="640" height="480" viewBox="0 0 640 480" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="640" height="480" rx="48" fill="#FDE68A" fill-opacity="0.4"/>
+<circle cx="240" cy="200" r="120" fill="#F59E0B" fill-opacity="0.25"/>
+<circle cx="420" cy="280" r="140" fill="#FDE68A"/>
+<path d="M213 279C203 251 216 214 247 205C272 199 296 212 308 234C320 256 349 263 368 247C382 235 385 213 377 197C368 179 351 160 327 152C293 141 252 143 220 163C180 187 162 234 175 278C183 303 203 323 228 330C250 336 272 330 290 316C300 308 312 311 323 317C342 327 363 332 384 329C417 324 448 305 464 276C480 247 478 210 460 183C432 143 380 123 329 123C278 123 228 146 198 183C161 227 152 291 180 339C211 392 278 420 339 404C394 390 436 344 444 289C447 269 446 247 438 228" stroke="#92400E" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M260 214C266 200 282 192 297 197C312 202 320 218 315 233C310 248 294 256 279 251C264 246 256 230 260 214Z" fill="#F59E0B"/>
+<path d="M364 214C370 200 386 192 401 197C416 202 424 218 419 233C414 248 398 256 383 251C368 246 360 230 364 214Z" fill="#FBBF24"/>
+<path d="M276 302C283 297 293 298 298 305C314 328 346 332 369 317" stroke="#92400E" stroke-width="10" stroke-linecap="round"/>
+<rect x="120" y="360" width="400" height="36" rx="18" fill="#F59E0B" fill-opacity="0.25"/>
+<rect x="150" y="396" width="340" height="24" rx="12" fill="#F59E0B" fill-opacity="0.35"/>
+<rect x="160" y="342" width="180" height="36" rx="18" fill="#FBBF24" fill-opacity="0.6"/>
+<rect x="344" y="342" width="160" height="36" rx="18" fill="#F59E0B" fill-opacity="0.5"/>
+</svg>
