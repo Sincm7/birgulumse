@@ -1,0 +1,14 @@
+:root {
+  --brand-primary: #f59e0b;
+  --brand-secondary: #92400e;
+  --brand-muted: #fef3c7;
+}
+
+.bg-grid {
+  background-image: radial-gradient(circle at 1px 1px, rgba(249, 181, 94, 0.3) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+.card-shadow {
+  box-shadow: 0 20px 45px -20px rgba(146, 64, 14, 0.25);
+}

@@ -1,70 +1,110 @@
-# Getting Started with Create React App
+# BirGülümse Web Uygulaması
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+BirGülümse; bağışçıları, bebek ürünü desteğine ihtiyaç duyan ailelerle buluşturan sosyal bağış platformudur. Bu depo; React, Tailwind CSS ve Supabase altyapısı kullanılarak hazırlanmış tam işlevli web uygulamasını içerir.
 
-## Available Scripts
+## Özellik Özeti
 
-In the project directory, you can run:
+- **Rol tabanlı deneyim:** Bağışçı, ihtiyaç sahibi ve yönetici rollerine göre yönlendirilmiş akışlar.
+- **Supabase entegrasyonu:** Kimlik doğrulama, veritabanı CRUD işlemleri ve görsel yüklemeleri.
+- **İlan yönetimi:** Bağışçıların ilan oluşturması, telefon bilgisi, konum ve fotoğraf paylaşımı.
+- **Yönetici paneli:** Aktif/pasif ilan denetimi, bağış tamamlanma onayı ve istatistikler.
+- **Lokasyon desteği:** Tarayıcıdan konum izni ya da manuel il/ilçe/mahalle girişi.
+- **Anonimlik modu:** Bağışçı ve ihtiyaç sahipleri isimlerini gizleyebiliyor.
+- **Harita bileşeni:** Leaflet ile bağış konumunun yaklaşık gösterimi.
 
-### `npm start`
+## Kurulum
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+```bash
+cd birgulumse
+npm install
+npm run dev # CRA tabanlı projede `npm start`
+```
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+Geliştirme sunucusu varsayılan olarak `http://localhost:3000` adresinde çalışır.
 
-### `npm test`
+## Ortam Değişkenleri
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+`.env.local` dosyası oluşturup aşağıdaki değerleri girin:
 
-### `npm run build`
+```bash
+REACT_APP_SUPABASE_URL=your-supabase-url
+REACT_APP_SUPABASE_ANON_KEY=your-public-anon-key
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+> **Not:** Supabase istemcisinin çalışması için bu anahtarların tanımlı olması gerekir. Değerler tarayıcıya aktarılacağından yalnızca anonim (public) anahtarı kullanın.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Supabase Şema Önerisi
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Veritabanında aşağıdaki tabloları oluşturun. Tüm tablolar için Row Level Security (RLS) etkinleştirip uygun politikaları tanımlayın.
 
-### `npm run eject`
+### `profiles`
+| Kolon | Tip | Açıklama |
+| --- | --- | --- |
+| `id` | `uuid` | `auth.users` tablosundaki kullanıcı ID'si (PK). |
+| `email` | `text` | Kullanıcı e-postası. |
+| `full_name` | `text` | Gösterilen isim. |
+| `role` | `text` | `donor`, `receiver`, `admin`. |
+| `is_anonymous` | `boolean` | Anonim mod durumu. |
+| `donation_count` | `integer` | Tamamlanan bağış sayısı. |
+| `phone` | `text` | Opsiyonel iletişim bilgisi. |
+| `created_at` | `timestamp` | Varsayılan `now()`. |
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### `listings`
+| Kolon | Tip | Açıklama |
+| --- | --- | --- |
+| `id` | `uuid` | Birincil anahtar. |
+| `owner_id` | `uuid` | `profiles.id` ile ilişki. |
+| `title` | `text` | İlan başlığı. |
+| `description` | `text` | İlan açıklaması. |
+| `category` | `text` | Sekiz kategoriden biri. |
+| `phone` | `text` | Bağışçı telefonu. |
+| `is_anonymous` | `boolean` | İlanda isim gizleme. |
+| `photo_url` | `text` | Supabase Storage URL'si. |
+| `location_city` | `text` | İl bilgisi. |
+| `location_district` | `text` | İlçe bilgisi. |
+| `location_neighborhood` | `text` | Mahalle bilgisi. |
+| `latitude` | `numeric` | Opsiyonel koordinat. |
+| `longitude` | `numeric` | Opsiyonel koordinat. |
+| `status` | `text` | `pending`, `active`, `completed`, `draft`. |
+| `approved_by` | `uuid` | Onaylayan admin. |
+| `approved_at` | `timestamp` | Onay zamanı. |
+| `created_at` | `timestamp` | Varsayılan `now()`. |
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### `donation_history`
+| Kolon | Tip | Açıklama |
+| --- | --- | --- |
+| `id` | `uuid` | Birincil anahtar. |
+| `listing_id` | `uuid` | İlgili ilan. |
+| `status` | `text` | `pending`, `approved`, `rejected`. |
+| `created_at` | `timestamp` | Talep zamanı. |
+| `approved_at` | `timestamp` | Admin onay zamanı. |
+| `approved_by` | `uuid` | Onaylayan admin kullanıcısı. |
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### Storage
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+`listing-photos` isimli bir bucket açıp herkese açık (public) okuma izni verin. Yüklemeler sırasında `supabase.storage.from('listing-photos')` kullanılır.
 
-## Learn More
+## Supabase Politikaları
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Önerilen bazı kurallar:
+- Kullanıcılar yalnızca kendi `profiles` satırlarını görüntüleyip güncelleyebilir.
+- `listings` tablosunda bağışçılar yalnızca kendilerine ait satırları ekleyip düzenleyebilir. `status = 'pending'` -> admin onayına kadar yayınlanmaz.
+- `donation_history` tablosunda bağışçılar kendi ilanları için satır ekleyebilir, sadece adminler güncelleyebilir.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Harita ve Konum
 
-### Code Splitting
+İlan detay sayfasında Leaflet/OpenStreetMap kullanılır. Koordinat yoksa kullanıcıya yalnızca metinsel adres gösterilir.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## Komutlar
 
-### Analyzing the Bundle Size
+- `npm start` – geliştirme sunucusu.
+- `npm run build` – üretim paketi.
+- `npm test` – Jest testi (örnek testler henüz tanımlı değil).
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## Tasarım
 
-### Making a Progressive Web App
+Tailwind CSS ile sahibinden.com benzeri sıcak sarı tonlarda, ama markaya özgü bir arayüz kullanıldı. Bileşenler `src/components`, sayfalar `src/pages`, yardımcı fonksiyonlar `src/lib` klasöründe bulunur.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## Lisans
 
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Proje, ilgili kurumun iç kullanımına yöneliktir. Açık kaynak lisansı eklemeden paylaşmayın.
