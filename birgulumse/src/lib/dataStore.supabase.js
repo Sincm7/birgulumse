@@ -128,4 +128,15 @@ export function subscribeToAuth(callback) {
       callback(session)
     })
   }
+  // === KULLANICI OLUŞTURMA ===
+export async function createUser(email, password, fullName, role = 'donor') {
+    const { data, error } = await supabase.auth.signUp({ email, password })
+    if (error) throw error
+  
+    // Kullanıcı oluşturulduysa profile tablosuna ekle
+    await supabase.from('profiles').insert([
+      { id: data.user.id, full_name: fullName, role },
+    ])
+    return data.user
+  }
   
