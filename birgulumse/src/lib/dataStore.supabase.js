@@ -48,11 +48,12 @@ const fromDbLocation = (row) => ({
    AUTH / SESSION
    ========================= */
 
-export async function getSession() {
-  const { data, error } = await supabase.auth.getSession();
-  if (error) throw error;
-  return data.session ?? null;
-}
+   export async function getSession() {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    if (error) throw error;
+    return session ?? null;
+  }
+  
 
 export function subscribeToAuth(callback) {
   // callback(session)
@@ -75,22 +76,16 @@ export async function findUserByEmail(_email) {
   return null;
 }
 
-export async function createUser({ email, password, role, full_name, is_anonymous }) {
-  const { data, error } = await supabase.auth.signUp({ email, password });
-  if (error) throw error;
-
-  // profile upsert
-  await upsertProfile({
-    id: data.user.id,
-    email,
-    role,
-    full_name,
-    is_anonymous: !!is_anonymous,
-    donation_count: 0
-  });
-
-  return { id: data.user.id, email: data.user.email };
-}
+export async function createUser({ email, password, role, full_name }) {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name, role } },
+    });
+    if (error) throw error;
+    return data.user;
+  }
+  
 
 export async function upsertProfile(profile) {
   const payload = {
@@ -138,30 +133,23 @@ export async function getProfilesCount() {
 }
 
 export async function incrementProfileDonationCount(userId) {
-  const { data, error } = await supabase
-    .from('profiles')
-    .update({ donations_count: supabase.rpc ? undefined : undefined }) // placeholder
-    .eq('id', userId)
-    .select()
-    .maybeSingle();
-
-  // Not: Anon anahtarla increment için iki yol:
-  // 1) SQL RPC function yazıp çağırmak (tercih edilir), veya
-  // 2) Row’u çekip +1 yapıp geri yazmak.
-  // Burada 2. yolu uygulayalım:
-
-  if (error && error.code !== 'PGRST116') {
-    // bazı projelerde "no return" hatası verebilir; fallback yapacağız
+    const { data: profile, error: fetchErr } = await supabase
+      .from('profiles')
+      .select('donations_count')
+      .eq('id', userId)
+      .maybeSingle();
+    if (fetchErr) throw fetchErr;
+  
+    const newCount = (profile?.donations_count ?? 0) + 1;
+  
+    const { error: updateErr } = await supabase
+      .from('profiles')
+      .update({ donations_count: newCount })
+      .eq('id', userId);
+    if (updateErr) throw updateErr;
+  
+    return newCount;
   }
-
-  // Read → increment → write
-  const profile = await getProfileById(userId);
-  if (!profile) return null;
-  const newCount = (profile.donation_count ?? 0) + 1;
-  const { error: updErr } = await supabase.from('profiles').update({ donations_count: newCount }).eq('id', userId);
-  if (updErr) throw updErr;
-  return { ...profile, donation_count: newCount };
-}
 
 /* =========================
    LİSTİNGS (İLANLAR)
