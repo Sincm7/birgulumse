@@ -122,4 +122,10 @@ export async function getSession() {
     if (error) throw error
     return data.session
   }
+  // === AUTH DEĞİŞİKLİKLERİNİ DİNLEME ===
+export function subscribeToAuth(callback) {
+    return supabase.auth.onAuthStateChange((_event, session) => {
+      callback(session)
+    })
+  }
   
