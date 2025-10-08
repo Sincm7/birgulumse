@@ -7,7 +7,7 @@ import {
   incrementProfileDonationCount,
   setSession,
   upsertProfile
-} from './dataStore';
+} from './dataStore.supabase';
 import { ROLES } from './constants';
 
 export async function signUp({ email, password, fullName, role, isAnonymous }) {

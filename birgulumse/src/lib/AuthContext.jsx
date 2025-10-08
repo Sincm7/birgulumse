@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { fetchProfile } from './auth';
-import { getSession, subscribeToAuth } from './dataStore';
+import { getSession, subscribeToAuth } from './dataStore.supabase';
 
 const AuthContext = createContext({
   user: null,

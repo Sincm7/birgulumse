@@ -8,7 +8,7 @@ import {
   saveUpload,
   updateDonations,
   updateListingById
-} from './dataStore';
+} from './dataStore.supabase';
 import { incrementDonationCount } from './auth';
 import { STATUS } from './constants';
 
