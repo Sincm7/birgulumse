@@ -1,4 +1,4 @@
-import { Toaster } from 'react-hot-toast';
+import { Toaster } from '../lib/toast';
 import { Footer } from './Footer';
 import { Header } from './Header';
 

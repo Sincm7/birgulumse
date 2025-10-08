@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast';
+import { useNavigate } from '../lib/router';
+import { toast } from '../lib/toast';
 import { LocationFields } from '../components/LocationFields';
 import { useAuth } from '../lib/AuthContext';
 import { CATEGORY_OPTIONS, ROLES, STATUS } from '../lib/constants';

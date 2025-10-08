@@ -1,4 +1,4 @@
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from '../lib/router';
 import { useState } from 'react';
 import { signOut } from '../lib/auth';
 import { useAuth } from '../lib/AuthContext';

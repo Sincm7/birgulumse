@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes } from './lib/router';
 import { Layout } from './components/Layout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import AdminDashboardPage from './pages/AdminDashboard';
@@ -21,14 +21,30 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
 
-        <Route element={<ProtectedRoute allowRoles={[ROLES.DONOR]} />}>
-          <Route path="/create-listing" element={<CreateListingPage />} />
-          <Route path="/dashboard" element={<DonorDashboardPage />} />
-        </Route>
-
-        <Route element={<ProtectedRoute allowRoles={[ROLES.ADMIN]} />}>
-          <Route path="/admin" element={<AdminDashboardPage />} />
-        </Route>
+        <Route
+          path="/create-listing"
+          element={
+            <ProtectedRoute allowRoles={[ROLES.DONOR]}>
+              <CreateListingPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute allowRoles={[ROLES.DONOR]}>
+              <DonorDashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute allowRoles={[ROLES.ADMIN]}>
+              <AdminDashboardPage />
+            </ProtectedRoute>
+          }
+        />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

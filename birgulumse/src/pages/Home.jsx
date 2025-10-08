@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from '../lib/router';
 import { CategoryFilter } from '../components/CategoryFilter';
 import { EmptyState } from '../components/EmptyState';
 import { ListingCard } from '../components/ListingCard';
