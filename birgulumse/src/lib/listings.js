@@ -1,172 +1,128 @@
-import { supabase, STORAGE_BUCKETS, TABLES } from '../supabaseClient';
+import {
+  addDonation,
+  addListing,
+  deleteListingById,
+  getDonations,
+  getListingById,
+  getListings,
+  saveUpload,
+  updateDonations,
+  updateListingById
+} from './dataStore';
 import { incrementDonationCount } from './auth';
 import { STATUS } from './constants';
 
-const randomFileName = (originalName) => {
-  const ext = originalName.split('.').pop();
-  const unique = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-  return `${unique}.${ext}`;
+const generateFilePath = (originalName) => {
+  const ext = originalName?.split('.').pop() ?? 'jpg';
+  return `listing-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
 };
+
+const readFileAsDataUrl = (file) =>
+  new Promise((resolve, reject) => {
+    if (typeof FileReader === 'undefined') {
+      resolve(null);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error || new Error('Dosya okunamadı'));
+    reader.readAsDataURL(file);
+  });
 
 export async function uploadListingPhoto(file) {
   if (!file) return null;
-  const filePath = randomFileName(file.name);
 
-  const { error } = await supabase.storage
-    .from(STORAGE_BUCKETS.LISTING_PHOTOS)
-    .upload(filePath, file, {
-      cacheControl: '3600',
-      upsert: false
-    });
+  const dataUrl = await readFileAsDataUrl(file);
+  if (!dataUrl) return null;
 
-  if (error) throw error;
-
-  const { data: publicUrlData } = supabase.storage
-    .from(STORAGE_BUCKETS.LISTING_PHOTOS)
-    .getPublicUrl(filePath);
-
-  return publicUrlData?.publicUrl ?? null;
+  const path = generateFilePath(file.name);
+  const { publicUrl } = saveUpload(path, dataUrl);
+  return publicUrl;
 }
 
 export async function createListing(payload) {
-  const { data, error } = await supabase
-    .from(TABLES.LISTINGS)
-    .insert([{ ...payload, status: STATUS.PENDING }])
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
+  const created = addListing({ ...payload, status: STATUS.PENDING });
+  return getListingById(created.id);
 }
 
 export async function fetchListings({ category, status = STATUS.ACTIVE } = {}) {
-  let query = supabase
-    .from(TABLES.LISTINGS)
-    .select(`*, profiles(full_name, is_anonymous, role)`)
-    .eq('status', status)
-    .order('created_at', { ascending: false });
-
-  if (category) {
-    query = query.eq('category', category);
-  }
-
-  const { data, error } = await query;
-  if (error) throw error;
-  return data;
+  return getListings({ category, status });
 }
 
 export async function fetchListingById(id) {
-  const { data, error } = await supabase
-    .from(TABLES.LISTINGS)
-    .select(`*, profiles(full_name, is_anonymous, phone, role)`)
-    .eq('id', id)
-    .single();
-
-  if (error) throw error;
-  return data;
+  return getListingById(id);
 }
 
 export async function fetchListingsByOwner(ownerId) {
-  const { data, error } = await supabase
-    .from(TABLES.LISTINGS)
-    .select('*')
-    .eq('owner_id', ownerId)
-    .order('created_at', { ascending: false });
-
-  if (error) throw error;
-  return data;
+  return getListings({ ownerId });
 }
 
 export async function updateListingStatus(id, status) {
-  const { data, error } = await supabase
-    .from(TABLES.LISTINGS)
-    .update({ status })
-    .eq('id', id)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
+  const updated = updateListingById(id, { status });
+  if (!updated) {
+    throw new Error('İlan bulunamadı');
+  }
+  return updated;
 }
 
 export async function updateListing(id, payload) {
-  const { data, error } = await supabase
-    .from(TABLES.LISTINGS)
-    .update(payload)
-    .eq('id', id)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
+  const updated = updateListingById(id, payload);
+  if (!updated) {
+    throw new Error('İlan bulunamadı');
+  }
+  return updated;
 }
 
 export async function deleteListing(id) {
-  const { error } = await supabase
-    .from(TABLES.LISTINGS)
-    .delete()
-    .eq('id', id);
-
-  if (error) throw error;
+  const removed = deleteListingById(id);
+  if (!removed) {
+    throw new Error('İlan silinemedi');
+  }
 }
 
 export async function requestDonationApproval(listingId) {
-  const { data, error } = await supabase
-    .from(TABLES.DONATIONS)
-    .insert([{ listing_id: listingId, status: 'pending' }])
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
+  const donation = addDonation({ listing_id: listingId, status: 'pending' });
+  return donation;
 }
 
 export async function fetchDonationStats() {
-  const [{ count: activeCount, error: activeError }, { count: completedCount, error: completedError }] = await Promise.all([
-    supabase.from(TABLES.LISTINGS).select('*', { count: 'exact', head: true }).eq('status', STATUS.ACTIVE),
-    supabase.from(TABLES.LISTINGS).select('*', { count: 'exact', head: true }).eq('status', STATUS.COMPLETED)
-  ]);
-
-  if (activeError) throw activeError;
-  if (completedError) throw completedError;
-
-  return { activeCount: activeCount ?? 0, completedCount: completedCount ?? 0 };
+  const activeCount = getListings({ status: STATUS.ACTIVE }).length;
+  const completedCount = getListings({ status: STATUS.COMPLETED }).length;
+  return { activeCount, completedCount };
 }
 
 export async function approveDonation(listingId, approverId) {
-  const { data, error } = await supabase
-    .from(TABLES.LISTINGS)
-    .update({ status: STATUS.COMPLETED, approved_by: approverId, approved_at: new Date().toISOString() })
-    .eq('id', listingId)
-    .select()
-    .single();
+  const listing = updateListingById(listingId, {
+    status: STATUS.COMPLETED,
+    approved_by: approverId,
+    approved_at: new Date().toISOString()
+  });
 
-  if (error) throw error;
+  if (!listing) {
+    throw new Error('İlan bulunamadı');
+  }
 
-  await supabase
-    .from(TABLES.DONATIONS)
-    .update({ status: 'approved', approved_by: approverId, approved_at: new Date().toISOString() })
-    .eq('listing_id', listingId)
-    .eq('status', 'pending');
+  updateDonations(
+    (donation) => donation.listing_id === listingId && donation.status === 'pending',
+    { status: 'approved', approved_by: approverId, approved_at: new Date().toISOString() }
+  );
 
-  if (data?.owner_id) {
+  if (listing.owner_id) {
     try {
-      await incrementDonationCount(data.owner_id);
-    } catch (incrementError) {
-      console.warn('Donation count increment failed', incrementError);
+      await incrementDonationCount(listing.owner_id);
+    } catch (error) {
+      console.warn('Bağış sayısı güncellenemedi', error);
     }
   }
 
-  return data;
+  return getListingById(listingId);
 }
 
 export async function fetchPendingDonationRequests() {
-  const { data, error } = await supabase
-    .from(TABLES.DONATIONS)
-    .select('id, created_at, status, listing_id, listings:listing_id(id, title, owner_id, status)')
-    .eq('status', 'pending')
-    .order('created_at', { ascending: true });
-
-  if (error) throw error;
-  return data;
+  const pending = getDonations((donation) => donation.status === 'pending');
+  return pending.map((entry) => ({
+    ...entry,
+    listings: getListingById(entry.listing_id)
+  }));
 }

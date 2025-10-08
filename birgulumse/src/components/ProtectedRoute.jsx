@@ -1,7 +1,7 @@
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate } from '../lib/router';
 import { useAuth } from '../lib/AuthContext';
 
-export function ProtectedRoute({ allowRoles }) {
+export function ProtectedRoute({ allowRoles, children }) {
   const { user, profile, loading } = useAuth();
 
   if (loading) {
@@ -20,5 +20,5 @@ export function ProtectedRoute({ allowRoles }) {
     return <Navigate to="/" replace />;
   }
 
-  return <Outlet />;
+  return children ?? null;
 }

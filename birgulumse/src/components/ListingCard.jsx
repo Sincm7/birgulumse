@@ -1,6 +1,5 @@
-import { Link } from 'react-router-dom';
-import { formatDistanceToNow } from 'date-fns';
-import { tr } from 'date-fns/locale';
+import { Link } from '../lib/router';
+import { formatRelativeTime } from '../lib/date';
 import { formatAddress } from '../lib/location';
 
 export function ListingCard({ listing }) {
@@ -46,7 +45,7 @@ export function ListingCard({ listing }) {
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 6v6l3 3" />
             </svg>
-            {created_at ? formatDistanceToNow(new Date(created_at), { addSuffix: true, locale: tr }) : 'Yeni'}
+            {created_at ? formatRelativeTime(created_at) : 'Yeni'}
           </span>
         </div>
       </div>

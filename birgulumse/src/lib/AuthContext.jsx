@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { supabase } from '../supabaseClient';
 import { fetchProfile } from './auth';
+import { getSession, subscribeToAuth } from './dataStore';
 
 const AuthContext = createContext({
   user: null,
@@ -16,10 +16,9 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const load = async () => {
       try {
-        const { data, error } = await supabase.auth.getSession();
-        if (error) throw error;
-        setSession(data.session);
-        if (data.session?.user) {
+        const initialSession = getSession();
+        setSession(initialSession);
+        if (initialSession?.user) {
           const profileData = await fetchProfile();
           setProfile(profileData);
         }
@@ -32,7 +31,7 @@ export function AuthProvider({ children }) {
 
     load();
 
-    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+    const unsubscribe = subscribeToAuth(async (newSession) => {
       setSession(newSession);
       if (newSession?.user) {
         try {
@@ -46,9 +45,7 @@ export function AuthProvider({ children }) {
       }
     });
 
-    return () => {
-      listener?.subscription?.unsubscribe();
-    };
+    return unsubscribe;
   }, []);
 
   const value = useMemo(

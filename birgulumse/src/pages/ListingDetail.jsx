@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import toast from 'react-hot-toast';
+import { useParams } from '../lib/router';
+import { toast } from '../lib/toast';
 import { MapView } from '../components/MapView';
 import { PhoneReveal } from '../components/PhoneReveal';
 import { LoadingSpinner } from '../components/LoadingSpinner';
