@@ -77,14 +77,19 @@ export async function findUserByEmail(_email) {
 }
 
 export async function createUser({ email, password, role, full_name }) {
+    const redirectTo = window.location.origin; // örn: http://localhost:3000
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name, role } },
+      options: {
+        data: { full_name, role },
+        emailRedirectTo: redirectTo, // 🔥 burada yönlendirme
+      },
     });
     if (error) throw error;
     return data.user;
   }
+  
   
 
 export async function upsertProfile(profile) {
